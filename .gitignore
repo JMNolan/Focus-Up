@@ -91,3 +91,6 @@ iOSInjectionProject/
 
 # Mac files
 .DS_Store
+
+# Test scripts
+test_logic.swift
