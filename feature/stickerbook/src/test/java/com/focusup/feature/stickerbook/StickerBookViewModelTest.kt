@@ -9,8 +9,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
@@ -28,7 +27,7 @@ class StickerBookViewModelTest {
     private lateinit var stickerRepository: StickerRepository
     private lateinit var viewModel: StickerBookViewModel
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
     fun setup() {
@@ -43,12 +42,12 @@ class StickerBookViewModelTest {
 
         // When
         viewModel = StickerBookViewModel(stickerRepository)
-        advanceUntilIdle()
 
         // Then
         viewModel.stickers.test {
             val stickers = awaitItem()
             assertTrue(stickers.isEmpty())
+            cancel()
         }
     }
 
@@ -64,15 +63,16 @@ class StickerBookViewModelTest {
 
         // When
         viewModel = StickerBookViewModel(stickerRepository)
-        advanceUntilIdle()
 
         // Then
         viewModel.stickers.test {
+            skipItems(1) // Skip initial empty list
             val stickers = awaitItem()
             assertEquals(3, stickers.size)
             assertEquals("Star", stickers[0].name)
             assertEquals("Trophy", stickers[1].name)
             assertEquals("Fire", stickers[2].name)
+            cancel()
         }
     }
 
@@ -88,10 +88,10 @@ class StickerBookViewModelTest {
 
         // When
         viewModel = StickerBookViewModel(stickerRepository)
-        advanceUntilIdle()
 
         // Then
         viewModel.stickers.test {
+            skipItems(1) // Skip initial empty list
             val stickers = awaitItem()
             assertEquals("Latest", stickers[0].name)
             assertEquals(5000L, stickers[0].earnedAt)
@@ -99,6 +99,7 @@ class StickerBookViewModelTest {
             assertEquals(3000L, stickers[1].earnedAt)
             assertEquals("Oldest", stickers[2].name)
             assertEquals(1000L, stickers[2].earnedAt)
+            cancel()
         }
     }
 
@@ -108,26 +109,18 @@ class StickerBookViewModelTest {
         val initialStickers = listOf(
             Sticker(1, "Star", "⭐", 1000L)
         )
-        val updatedStickers = listOf(
-            Sticker(1, "Star", "⭐", 1000L),
-            Sticker(2, "Trophy", "🏆", 2000L)
-        )
-
-        every { stickerRepository.getAllStickers() } returns flowOf(initialStickers, updatedStickers)
+        every { stickerRepository.getAllStickers() } returns flowOf(initialStickers)
 
         // When
         viewModel = StickerBookViewModel(stickerRepository)
 
         // Then
         viewModel.stickers.test {
-            // First emission
-            val first = awaitItem()
-            assertEquals(1, first.size)
-
-            advanceUntilIdle()
-
-            // Should eventually get the updated list
-            cancelAndIgnoreRemainingEvents()
+            skipItems(1) // Skip initial empty list
+            val stickers = awaitItem()
+            assertEquals(1, stickers.size)
+            assertEquals("Star", stickers[0].name)
+            cancel()
         }
     }
 
@@ -146,16 +139,17 @@ class StickerBookViewModelTest {
 
         // When
         viewModel = StickerBookViewModel(stickerRepository)
-        advanceUntilIdle()
 
         // Then
         viewModel.stickers.test {
+            skipItems(1) // Skip initial empty list
             val stickers = awaitItem()
             val sticker = stickers[0]
             assertEquals(42, sticker.id)
             assertEquals("Diamond", sticker.name)
             assertEquals("💎", sticker.emoji)
             assertEquals(123456789L, sticker.earnedAt)
+            cancel()
         }
     }
 
@@ -174,14 +168,15 @@ class StickerBookViewModelTest {
 
         // When
         viewModel = StickerBookViewModel(stickerRepository)
-        advanceUntilIdle()
 
         // Then
         viewModel.stickers.test {
+            skipItems(1) // Skip initial empty list
             val stickers = awaitItem()
             assertEquals(100, stickers.size)
             assertEquals("Sticker 1", stickers[0].name)
             assertEquals("Sticker 100", stickers[99].name)
+            cancel()
         }
     }
 
@@ -202,10 +197,10 @@ class StickerBookViewModelTest {
 
         // When
         viewModel = StickerBookViewModel(stickerRepository)
-        advanceUntilIdle()
 
         // Then
         viewModel.stickers.test {
+            skipItems(1) // Skip initial empty list
             val stickers = awaitItem()
             assertEquals(8, stickers.size)
 
@@ -219,6 +214,7 @@ class StickerBookViewModelTest {
             assertTrue(emojis.contains("⚡"))
             assertTrue(emojis.contains("🌟"))
             assertTrue(emojis.contains("👑"))
+            cancel()
         }
     }
 
@@ -233,19 +229,21 @@ class StickerBookViewModelTest {
 
         // When
         viewModel = StickerBookViewModel(stickerRepository)
-        advanceUntilIdle()
 
         // Then - Multiple collections should return same data
         viewModel.stickers.test {
+            skipItems(1) // Skip initial empty list
             val firstCollection = awaitItem()
             assertEquals(2, firstCollection.size)
+            cancel()
         }
 
         viewModel.stickers.test {
+            skipItems(1) // Skip initial empty list
             val secondCollection = awaitItem()
             assertEquals(2, secondCollection.size)
             assertEquals("Star", secondCollection[0].name)
+            cancel()
         }
     }
 }
-

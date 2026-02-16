@@ -26,6 +26,19 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.8"
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.jvmArgs(
+                    "-XX:+EnableDynamicAgentLoading",
+                    "-Djdk.instrument.traceUsage",
+                    "--add-opens=java.base/java.lang.instrument=ALL-UNNAMED"
+                )
+            }
+        }
+    }
 }
 
 dependencies {

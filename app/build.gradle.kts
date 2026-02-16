@@ -49,6 +49,19 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.jvmArgs(
+                    "-XX:+EnableDynamicAgentLoading",
+                    "-Djdk.instrument.traceUsage",
+                    "--add-opens=java.base/java.lang.instrument=ALL-UNNAMED"
+                )
+            }
+        }
+    }
 }
 
 dependencies {

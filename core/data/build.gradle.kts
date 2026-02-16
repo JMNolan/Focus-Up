@@ -7,15 +7,30 @@ plugins {
 android {
     namespace = "com.focusup.core.data"
     compileSdk = 34
+
     defaultConfig {
         minSdk = 24
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+            all {
+                it.jvmArgs(
+                    "-XX:+EnableDynamicAgentLoading",
+                    "-Djdk.instrument.traceUsage",
+                    "--add-opens=java.base/java.lang.instrument=ALL-UNNAMED"
+                )
+            }
+        }
     }
 }
 dependencies {
