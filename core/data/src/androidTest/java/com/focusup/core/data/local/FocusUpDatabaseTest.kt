@@ -5,7 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -53,7 +53,7 @@ class FocusUpDatabaseTest {
     }
 
     @Test
-    fun insertAndRetrieveSticker() = runTest {
+    fun insertAndRetrieveSticker() = runBlocking {
         // Given
         val sticker = StickerEntity(
             id = 0,
@@ -76,7 +76,7 @@ class FocusUpDatabaseTest {
     }
 
     @Test
-    fun insertMultipleStickers() = runTest {
+    fun insertMultipleStickers() = runBlocking {
         // Given
         val stickers = listOf(
             StickerEntity(0, "Star", "⭐", 1000L),
@@ -96,7 +96,7 @@ class FocusUpDatabaseTest {
     }
 
     @Test
-    fun stickersAreOrderedByEarnedAtDesc() = runTest {
+    fun stickersAreOrderedByEarnedAtDesc() = runBlocking {
         // Given - Insert in non-chronological order
         stickerDao.insertSticker(StickerEntity(0, "Middle", "🎯", 2000L))
         stickerDao.insertSticker(StickerEntity(0, "First", "⭐", 3000L))
@@ -113,7 +113,7 @@ class FocusUpDatabaseTest {
     }
 
     @Test
-    fun getStickerCountReturnsCorrectValue() = runTest {
+    fun getStickerCountReturnsCorrectValue() = runBlocking {
         // Given
         assertEquals(0, stickerDao.getStickerCount())
 
@@ -126,7 +126,7 @@ class FocusUpDatabaseTest {
     }
 
     @Test
-    fun replaceStickerOnConflict() = runTest {
+    fun replaceStickerOnConflict() = runBlocking {
         // Given
         stickerDao.insertSticker(StickerEntity(1, "Original", "⭐", 1000L))
 
@@ -144,7 +144,7 @@ class FocusUpDatabaseTest {
     }
 
     @Test
-    fun flowEmitsUpdatesOnInsert() = runTest {
+    fun flowEmitsUpdatesOnInsert() = runBlocking {
         // When/Then
         stickerDao.getAllStickers().test {
             // Initial empty state
@@ -161,7 +161,7 @@ class FocusUpDatabaseTest {
     }
 
     @Test
-    fun emptyDatabaseReturnsEmptyList() = runTest {
+    fun emptyDatabaseReturnsEmptyList() = runBlocking {
         stickerDao.getAllStickers().test {
             val stickers = awaitItem()
             assertTrue(stickers.isEmpty())
