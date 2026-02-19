@@ -9,9 +9,12 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -27,32 +30,34 @@ class StickerBookViewModelTest {
     private lateinit var stickerRepository: StickerRepository
     private lateinit var viewModel: StickerBookViewModel
 
-    private val testDispatcher = UnconfinedTestDispatcher()
+    private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        stickerRepository = mockk()
+        stickerRepository = mockk(relaxed = true)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     @Test
-    fun `initial state is empty list`() = runTest {
+    fun `initial state is empty list`() = runTest(testDispatcher) {
         // Given
         every { stickerRepository.getAllStickers() } returns flowOf(emptyList())
 
         // When
         viewModel = StickerBookViewModel(stickerRepository)
 
-        // Then
-        viewModel.stickers.test {
-            val stickers = awaitItem()
-            assertTrue(stickers.isEmpty())
-            cancel()
-        }
+        // Then - StateFlow should have the repository value
+        // The flow from repository immediately returns empty list
+        assertEquals(emptyList<Sticker>(), viewModel.stickers.value)
     }
 
     @Test
-    fun `stickers are loaded from repository`() = runTest {
+    fun `stickers are loaded from repository`() = runTest(testDispatcher) {
         // Given
         val testStickers = listOf(
             Sticker(1, "Star", "⭐", 1000L),
@@ -64,9 +69,12 @@ class StickerBookViewModelTest {
         // When
         viewModel = StickerBookViewModel(stickerRepository)
 
-        // Then
+        // Collect to activate the StateFlow
         viewModel.stickers.test {
-            skipItems(1) // Skip initial empty list
+            // First emission is the initialValue (empty list)
+            awaitItem()
+            // Now advance to get the repository data
+            runCurrent()
             val stickers = awaitItem()
             assertEquals(3, stickers.size)
             assertEquals("Star", stickers[0].name)
@@ -77,7 +85,7 @@ class StickerBookViewModelTest {
     }
 
     @Test
-    fun `stickers maintain correct order from repository`() = runTest {
+    fun `stickers maintain correct order from repository`() = runTest(testDispatcher) {
         // Given - Repository returns stickers in descending order by earnedAt
         val testStickers = listOf(
             Sticker(3, "Latest", "🔥", 5000L),
@@ -91,7 +99,8 @@ class StickerBookViewModelTest {
 
         // Then
         viewModel.stickers.test {
-            skipItems(1) // Skip initial empty list
+            awaitItem() // Skip initial empty list
+            runCurrent() // Execute pending coroutines
             val stickers = awaitItem()
             assertEquals("Latest", stickers[0].name)
             assertEquals(5000L, stickers[0].earnedAt)
@@ -104,7 +113,7 @@ class StickerBookViewModelTest {
     }
 
     @Test
-    fun `stickers update when repository emits new values`() = runTest {
+    fun `stickers update when repository emits new values`() = runTest(testDispatcher) {
         // Given
         val initialStickers = listOf(
             Sticker(1, "Star", "⭐", 1000L)
@@ -116,7 +125,8 @@ class StickerBookViewModelTest {
 
         // Then
         viewModel.stickers.test {
-            skipItems(1) // Skip initial empty list
+            awaitItem() // Skip initial empty list
+            runCurrent() // Execute pending coroutines
             val stickers = awaitItem()
             assertEquals(1, stickers.size)
             assertEquals("Star", stickers[0].name)
@@ -125,7 +135,7 @@ class StickerBookViewModelTest {
     }
 
     @Test
-    fun `stickers contain all expected properties`() = runTest {
+    fun `stickers contain all expected properties`() = runTest(testDispatcher) {
         // Given
         val testStickers = listOf(
             Sticker(
@@ -142,7 +152,8 @@ class StickerBookViewModelTest {
 
         // Then
         viewModel.stickers.test {
-            skipItems(1) // Skip initial empty list
+            awaitItem() // Skip initial empty list
+            runCurrent() // Execute pending coroutines
             val stickers = awaitItem()
             val sticker = stickers[0]
             assertEquals(42, sticker.id)
@@ -154,7 +165,7 @@ class StickerBookViewModelTest {
     }
 
     @Test
-    fun `stickers handles large collection`() = runTest {
+    fun `stickers handles large collection`() = runTest(testDispatcher) {
         // Given
         val largeCollection = (1..100).map { index ->
             Sticker(
@@ -171,7 +182,8 @@ class StickerBookViewModelTest {
 
         // Then
         viewModel.stickers.test {
-            skipItems(1) // Skip initial empty list
+            awaitItem() // Skip initial empty list
+            runCurrent() // Execute pending coroutines
             val stickers = awaitItem()
             assertEquals(100, stickers.size)
             assertEquals("Sticker 1", stickers[0].name)
@@ -181,7 +193,7 @@ class StickerBookViewModelTest {
     }
 
     @Test
-    fun `stickers handles emoji variety`() = runTest {
+    fun `stickers handles emoji variety`() = runTest(testDispatcher) {
         // Given
         val diverseStickers = listOf(
             Sticker(1, "Star", "⭐", 1000L),
@@ -200,7 +212,8 @@ class StickerBookViewModelTest {
 
         // Then
         viewModel.stickers.test {
-            skipItems(1) // Skip initial empty list
+            awaitItem() // Skip initial empty list
+            runCurrent() // Execute pending coroutines
             val stickers = awaitItem()
             assertEquals(8, stickers.size)
 
@@ -219,7 +232,7 @@ class StickerBookViewModelTest {
     }
 
     @Test
-    fun `viewModel maintains state across recomposition`() = runTest {
+    fun `viewModel maintains state across recomposition`() = runTest(testDispatcher) {
         // Given
         val testStickers = listOf(
             Sticker(1, "Star", "⭐", 1000L),
@@ -230,20 +243,21 @@ class StickerBookViewModelTest {
         // When
         viewModel = StickerBookViewModel(stickerRepository)
 
-        // Then - Multiple collections should return same data
+        // Then - Collect once to activate StateFlow
         viewModel.stickers.test {
-            skipItems(1) // Skip initial empty list
+            awaitItem() // Skip initial empty list
+            runCurrent() // Execute pending coroutines
             val firstCollection = awaitItem()
             assertEquals(2, firstCollection.size)
+            assertEquals("Star", firstCollection[0].name)
             cancel()
         }
 
-        viewModel.stickers.test {
-            skipItems(1) // Skip initial empty list
-            val secondCollection = awaitItem()
-            assertEquals(2, secondCollection.size)
-            assertEquals("Star", secondCollection[0].name)
-            cancel()
-        }
+        // StateFlow should maintain the cached value
+        // We can access it via .value without collecting again
+        val cachedValue = viewModel.stickers.value
+        assertEquals(2, cachedValue.size)
+        assertEquals("Star", cachedValue[0].name)
+        assertEquals("Trophy", cachedValue[1].name)
     }
 }
