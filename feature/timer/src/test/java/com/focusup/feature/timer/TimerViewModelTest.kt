@@ -58,13 +58,13 @@ class TimerViewModelTest {
     @Test
     fun `selectDuration updates state correctly`() = runTest {
         // When
-        viewModel.selectDuration(TimerDuration.FIFTEEN_MINUTES)
+        viewModel.selectDuration(TimerDuration.FIFTEEN_MIN)
 
         // Then
         viewModel.uiState.test {
             val state = awaitItem()
-            assertEquals(TimerDuration.FIFTEEN_MINUTES, state.selectedDuration)
-            assertEquals(TimerDuration.FIFTEEN_MINUTES.milliseconds, state.remainingTimeMillis)
+            assertEquals(TimerDuration.FIFTEEN_MIN, state.selectedDuration)
+            assertEquals(TimerDuration.FIFTEEN_MIN.milliseconds, state.remainingTimeMillis)
             assertFalse(state.isRunning)
             assertFalse(state.isCompleted)
         }
@@ -73,7 +73,7 @@ class TimerViewModelTest {
     @Test
     fun `selectDuration does not change when timer is running`() = runTest {
         // Given
-        viewModel.selectDuration(TimerDuration.FIVE_SECONDS)
+        viewModel.selectDuration(TimerDuration.TEST)
 
         val testSticker = Sticker(1, "Star", "⭐", System.currentTimeMillis())
         coEvery { stickerRepository.getRandomAvailableSticker() } returns testSticker
@@ -87,13 +87,13 @@ class TimerViewModelTest {
 
         // Then - Should still be the original duration
         val state = viewModel.uiState.value
-        assertEquals(TimerDuration.FIVE_SECONDS, state.selectedDuration)
+        assertEquals(TimerDuration.TEST, state.selectedDuration)
     }
 
     @Test
     fun `startTimer sets isRunning to true`() = runTest {
         // Given
-        viewModel.selectDuration(TimerDuration.FIVE_SECONDS)
+        viewModel.selectDuration(TimerDuration.TEST)
 
         val testSticker = Sticker(1, "Star", "⭐", System.currentTimeMillis())
         coEvery { stickerRepository.getRandomAvailableSticker() } returns testSticker
@@ -105,7 +105,7 @@ class TimerViewModelTest {
         // Then
         val state = viewModel.uiState.value
         assertTrue(state.isRunning)
-        assertEquals(TimerDuration.FIVE_SECONDS.milliseconds, state.remainingTimeMillis)
+        assertEquals(TimerDuration.TEST.milliseconds, state.remainingTimeMillis)
     }
 
     @Test
@@ -126,7 +126,7 @@ class TimerViewModelTest {
         coEvery { stickerRepository.getRandomAvailableSticker() } returns testSticker
         coEvery { stickerRepository.addSticker(any()) } returns Unit
 
-        viewModel.selectDuration(TimerDuration.FIVE_SECONDS)
+        viewModel.selectDuration(TimerDuration.TEST)
 
         // When
         viewModel.startTimer()
@@ -152,7 +152,7 @@ class TimerViewModelTest {
         coEvery { stickerRepository.getRandomAvailableSticker() } returns testSticker
         coEvery { stickerRepository.addSticker(any()) } returns Unit
 
-        viewModel.selectDuration(TimerDuration.FIVE_SECONDS)
+        viewModel.selectDuration(TimerDuration.TEST)
         viewModel.startTimer()
         advanceUntilIdle()
 
@@ -163,14 +163,14 @@ class TimerViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isRunning)
         assertFalse(state.isCompleted)
-        assertEquals(TimerDuration.FIVE_SECONDS.milliseconds, state.remainingTimeMillis)
+        assertEquals(TimerDuration.TEST.milliseconds, state.remainingTimeMillis)
         assertNull(state.earnedSticker)
     }
 
     @Test
     fun `resetTimer stops running timer`() = runTest {
         // Given
-        viewModel.selectDuration(TimerDuration.FIFTEEN_MINUTES)
+        viewModel.selectDuration(TimerDuration.FIFTEEN_MIN)
         viewModel.startTimer()
         advanceTimeBy(1000)
 
@@ -180,7 +180,7 @@ class TimerViewModelTest {
         // Then
         val state = viewModel.uiState.value
         assertFalse(state.isRunning)
-        assertEquals(TimerDuration.FIFTEEN_MINUTES.milliseconds, state.remainingTimeMillis)
+        assertEquals(TimerDuration.FIFTEEN_MIN.milliseconds, state.remainingTimeMillis)
     }
 
     @Test
@@ -190,7 +190,7 @@ class TimerViewModelTest {
         coEvery { stickerRepository.getRandomAvailableSticker() } returns testSticker
         coEvery { stickerRepository.addSticker(any()) } returns Unit
 
-        viewModel.selectDuration(TimerDuration.FIVE_SECONDS)
+        viewModel.selectDuration(TimerDuration.TEST)
 
         // When
         viewModel.uiState.test {
@@ -213,13 +213,13 @@ class TimerViewModelTest {
     @Test
     fun `multiple duration selections work correctly`() = runTest {
         // When
-        viewModel.selectDuration(TimerDuration.FIVE_SECONDS)
+        viewModel.selectDuration(TimerDuration.TEST)
         var state = viewModel.uiState.value
-        assertEquals(TimerDuration.FIVE_SECONDS, state.selectedDuration)
+        assertEquals(TimerDuration.TEST, state.selectedDuration)
 
-        viewModel.selectDuration(TimerDuration.THIRTY_MINUTES)
+        viewModel.selectDuration(TimerDuration.THIRTY_MIN)
         state = viewModel.uiState.value
-        assertEquals(TimerDuration.THIRTY_MINUTES, state.selectedDuration)
+        assertEquals(TimerDuration.THIRTY_MIN, state.selectedDuration)
 
         viewModel.selectDuration(TimerDuration.ONE_HOUR)
         state = viewModel.uiState.value
@@ -233,14 +233,14 @@ class TimerViewModelTest {
         coEvery { stickerRepository.getRandomAvailableSticker() } returns testSticker
         coEvery { stickerRepository.addSticker(any()) } returns Unit
 
-        viewModel.selectDuration(TimerDuration.FIVE_SECONDS)
+        viewModel.selectDuration(TimerDuration.TEST)
         viewModel.startTimer()
         advanceUntilIdle()
 
         assertTrue(viewModel.uiState.value.isCompleted)
 
         // When - Select new duration
-        viewModel.selectDuration(TimerDuration.FIFTEEN_MINUTES)
+        viewModel.selectDuration(TimerDuration.FIFTEEN_MIN)
 
         // Then
         val state = viewModel.uiState.value
