@@ -37,6 +37,11 @@ fun TimerScreen(
                 remainingTimeMillis = uiState.remainingTimeMillis,
                 totalTimeMillis = uiState.selectedDuration?.milliseconds ?: 0L
             )
+        } else if (uiState.isFailed) {
+            FailureScreen(
+                onTryAgain = { viewModel.resetTimer() },
+                onViewStickerBook = onNavigateToStickerBook
+            )
         } else if (uiState.isCompleted) {
             CompletionScreen(
                 sticker = uiState.earnedSticker?.emoji ?: "⭐",
@@ -294,6 +299,85 @@ fun CompletionScreen(
                         .height(56.dp)
                 ) {
                     Text("Start New Timer")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedButton(
+                    onClick = onViewStickerBook,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("View Sticker Book")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FailureScreen(
+    onTryAgain: () -> Unit,
+    onViewStickerBook: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        AnimatedVisibility(
+            visible = true,
+            enter = scaleIn() + fadeIn(),
+            exit = scaleOut() + fadeOut()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "😔",
+                    fontSize = 80.sp
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Text(
+                    text = "Focus Lost!",
+                    style = MaterialTheme.typography.headlineLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = MaterialTheme.colorScheme.error
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "You didn't hold your concentration long enough to earn a sticker.",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 32.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Stay in the app to maintain your focus!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 32.dp)
+                )
+
+                Spacer(modifier = Modifier.height(48.dp))
+
+                Button(
+                    onClick = onTryAgain,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("Try Again")
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

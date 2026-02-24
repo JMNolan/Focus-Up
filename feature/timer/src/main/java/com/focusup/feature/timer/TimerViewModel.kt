@@ -1,5 +1,6 @@
 package com.focusup.feature.timer
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.focusup.core.domain.model.Sticker
@@ -20,6 +21,7 @@ data class TimerUiState(
     val isRunning: Boolean = false,
     val remainingTimeMillis: Long = 0L,
     val isCompleted: Boolean = false,
+    val isFailed: Boolean = false,
     val earnedSticker: Sticker? = null
 )
 
@@ -40,6 +42,7 @@ class TimerViewModel @Inject constructor(
                     selectedDuration = duration,
                     remainingTimeMillis = duration.milliseconds,
                     isCompleted = false,
+                    isFailed = false,
                     earnedSticker = null
                 )
             }
@@ -53,7 +56,8 @@ class TimerViewModel @Inject constructor(
             it.copy(
                 isRunning = true,
                 remainingTimeMillis = duration.milliseconds,
-                isCompleted = false
+                isCompleted = false,
+                isFailed = false
             )
         }
 
@@ -96,8 +100,29 @@ class TimerViewModel @Inject constructor(
                 isRunning = false,
                 remainingTimeMillis = it.selectedDuration?.milliseconds ?: 0,
                 isCompleted = false,
+                isFailed = false,
                 earnedSticker = null
             )
+        }
+    }
+
+    @Suppress("unused") // Called from MainActivity
+    fun failTimer() {
+        Log.d("TimerViewModel", "failTimer() called. Current state: isRunning=${_uiState.value.isRunning}")
+        if (_uiState.value.isRunning) {
+            Log.d("TimerViewModel", "Timer is running, failing it now")
+            timerJob?.cancel()
+            _uiState.update {
+                it.copy(
+                    isRunning = false,
+                    isCompleted = false,
+                    isFailed = true,
+                    earnedSticker = null
+                )
+            }
+            Log.d("TimerViewModel", "Timer failed. New state: isFailed=${_uiState.value.isFailed}")
+        } else {
+            Log.d("TimerViewModel", "Timer is not running, ignoring failTimer call")
         }
     }
 

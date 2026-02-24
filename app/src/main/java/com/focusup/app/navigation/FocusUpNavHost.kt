@@ -6,10 +6,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.focusup.feature.timer.TimerScreen
+import com.focusup.feature.timer.TimerViewModel
 import com.focusup.feature.stickerbook.StickerBookScreen
 
 @Composable
-fun FocusUpNavHost(modifier: Modifier = Modifier) {
+fun FocusUpNavHost(
+    modifier: Modifier = Modifier,
+    timerViewModel: TimerViewModel
+) {
     val navController = rememberNavController()
 
     NavHost(
@@ -21,7 +25,8 @@ fun FocusUpNavHost(modifier: Modifier = Modifier) {
             TimerScreen(
                 onNavigateToStickerBook = {
                     navController.navigate("stickerbook")
-                }
+                },
+                viewModel = timerViewModel
             )
         }
 

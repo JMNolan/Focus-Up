@@ -52,6 +52,7 @@ class TimerViewModelTest {
         assertFalse(state.isRunning)
         assertEquals(0L, state.remainingTimeMillis)
         assertFalse(state.isCompleted)
+        assertFalse(state.isFailed)
         assertNull(state.earnedSticker)
     }
 
@@ -246,6 +247,80 @@ class TimerViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isCompleted)
         assertNull(state.earnedSticker)
+    }
+
+    @Test
+    fun `failTimer stops running timer and sets failed state`() = runTest {
+        // Given
+        viewModel.selectDuration(TimerDuration.TEST)
+        viewModel.startTimer()
+        advanceTimeBy(1000)
+
+        assertTrue(viewModel.uiState.value.isRunning)
+
+        // When
+        viewModel.failTimer()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse(state.isRunning)
+        assertTrue(state.isFailed)
+        assertFalse(state.isCompleted)
+        assertNull(state.earnedSticker)
+    }
+
+    @Test
+    fun `failTimer does nothing when timer is not running`() = runTest {
+        // Given - Timer is not running
+        viewModel.selectDuration(TimerDuration.FIFTEEN_MIN)
+        val stateBefore = viewModel.uiState.value
+
+        // When
+        viewModel.failTimer()
+
+        // Then - State should be unchanged
+        val stateAfter = viewModel.uiState.value
+        assertEquals(stateBefore.isRunning, stateAfter.isRunning)
+        assertFalse(stateAfter.isFailed)
+    }
+
+    @Test
+    fun `resetTimer clears failed state`() = runTest {
+        // Given - Timer failed
+        viewModel.selectDuration(TimerDuration.FIFTEEN_MIN)
+        viewModel.startTimer()
+        advanceTimeBy(1000)
+        viewModel.failTimer()
+
+        assertTrue(viewModel.uiState.value.isFailed)
+
+        // When
+        viewModel.resetTimer()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse(state.isFailed)
+        assertFalse(state.isRunning)
+        assertFalse(state.isCompleted)
+    }
+
+    @Test
+    fun `selectDuration clears failed state`() = runTest {
+        // Given - Timer failed
+        viewModel.selectDuration(TimerDuration.FIFTEEN_MIN)
+        viewModel.startTimer()
+        advanceTimeBy(1000)
+        viewModel.failTimer()
+
+        assertTrue(viewModel.uiState.value.isFailed)
+
+        // When
+        viewModel.selectDuration(TimerDuration.THIRTY_MIN)
+
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse(state.isFailed)
+        assertFalse(state.isCompleted)
     }
 }
 
