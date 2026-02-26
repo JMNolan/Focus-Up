@@ -1,6 +1,5 @@
 package com.focusup.feature.timer
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.focusup.core.domain.model.Sticker
@@ -108,9 +107,7 @@ class TimerViewModel @Inject constructor(
 
     @Suppress("unused") // Called from MainActivity
     fun failTimer() {
-        Log.d("TimerViewModel", "failTimer() called. Current state: isRunning=${_uiState.value.isRunning}")
         if (_uiState.value.isRunning) {
-            Log.d("TimerViewModel", "Timer is running, failing it now")
             timerJob?.cancel()
             _uiState.update {
                 it.copy(
@@ -120,9 +117,6 @@ class TimerViewModel @Inject constructor(
                     earnedSticker = null
                 )
             }
-            Log.d("TimerViewModel", "Timer failed. New state: isFailed=${_uiState.value.isFailed}")
-        } else {
-            Log.d("TimerViewModel", "Timer is not running, ignoring failTimer call")
         }
     }
 

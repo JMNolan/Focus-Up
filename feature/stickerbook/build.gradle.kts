@@ -33,7 +33,9 @@ android {
             all {
                 it.jvmArgs(
                     "-XX:+EnableDynamicAgentLoading",
-                    "-Djdk.instrument.traceUsage",
+                    "-Xshare:off",  // Disable class data sharing to avoid agent warnings
+                    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+                    "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED",
                     "--add-opens=java.base/java.lang.instrument=ALL-UNNAMED"
                 )
             }
